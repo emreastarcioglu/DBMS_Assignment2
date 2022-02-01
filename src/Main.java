@@ -18,12 +18,11 @@ public class Main{
                 "subreddit", "created_utc",
         };
 
-        String line = br.readLine();
-        printValues(line, jsonKeys);
-        line = br.readLine();
-        printValues(line, jsonKeys);
-        line = br.readLine();
-        printValues(line, jsonKeys);
+        String line;
+        for (int i = 0; i < 20; i++){
+            line = br.readLine();
+            printValues(line, jsonKeys);
+        }
     }
 
     static void printValues(String line, String[] jsonKeys){
@@ -33,7 +32,15 @@ public class Main{
         for (String key : jsonKeys){
             System.out.println(key + ": " + obj.getString(key));
         }
+        System.out.println("score: " + obj.getBigInteger( "score"));
 
-        System.out.println(obj.getBigInteger("score"));
+        printDashes(100);
+        System.out.println();
+    }
+
+    static void printDashes(int n){
+        for (int i = 0; i < n; i++)
+            System.out.print("-");
     }
 }
+
