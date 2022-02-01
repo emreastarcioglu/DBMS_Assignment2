@@ -35,7 +35,7 @@ public class Main{
         String line;
 
         while ((line = br.readLine()) != null){
-            printValues(line);
+            parseJSONString(line);
         }
     }
 
@@ -96,19 +96,19 @@ public class Main{
 
     }
 
-    static void printValues(String line){
-
+    static void parseJSONString(String line){
         JSONObject obj = new JSONObject(line);
 
-        for (int i = 0; i < 9; i++){
-            System.out.println(jsonKeys[i] + ": " + obj.get(jsonKeys[i]));
-        }
-        System.out.println(jsonKeys[9] + ": " + obj.get(jsonKeys[9]));
-
-
-        printDashes(100);
-        System.out.println();
-
+        id = obj.getString(jsonKeys[0]);
+        parent_id = obj.getString(jsonKeys[1]);
+        link_id = obj.getString(jsonKeys[2]);
+        name = obj.getString(jsonKeys[3]);
+        author = obj.getString(jsonKeys[4]);
+        body = obj.getString(jsonKeys[5]);
+        subreddit = obj.getString(jsonKeys[6]);
+        subreddit = obj.getString(jsonKeys[7]);
+        created_utc = obj.getInt(jsonKeys[8]);
+        score = obj.getInt(jsonKeys[9]);
     }
 
     static void printDashes(int n){
