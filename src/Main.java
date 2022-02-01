@@ -16,6 +16,17 @@ public class Main{
             "subreddit", "created_utc", "score"
     };
 
+    String id = "";
+    String parent_id = "";
+    String link_id = "";
+    String name = "";
+    String author = "";
+    String body = "";
+    String subreddit_id = "";
+    String subreddit = "";
+    int created_utc = 0;
+    int score = 0;
+
     public static void main(String[] args) throws IOException {
 
         File jsonFile = new File("RC_2007-10");
@@ -52,16 +63,7 @@ public class Main{
 
     static void insert() throws SQLException {
 
-            String id = "";
-            String parent_id = "";
-            String link_id = "";
-            String name = "";
-            String author = "";
-            String body = "";
-            String subreddit_id = "";
-            String subreddit = "";
-            int created_utc = 0;
-            int score = 0;
+
 
 //            String query = "INSERT INTO client (personal_number, firstname, lastname, address) VALUES (?, ?, ?, ?)";
 //
