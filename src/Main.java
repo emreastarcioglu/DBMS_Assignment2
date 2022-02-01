@@ -16,16 +16,16 @@ public class Main{
             "subreddit", "created_utc", "score"
     };
 
-    String id = "";
-    String parent_id = "";
-    String link_id = "";
-    String name = "";
-    String author = "";
-    String body = "";
-    String subreddit_id = "";
-    String subreddit = "";
-    int created_utc = 0;
-    int score = 0;
+    static String id = "";
+    static String parent_id = "";
+    static String link_id = "";
+    static String name = "";
+    static String author = "";
+    static String body = "";
+    static String subreddit_id = "";
+    static String subreddit = "";
+    static int created_utc = 0;
+    static int score = 0;
 
     public static void main(String[] args) throws IOException {
 
@@ -63,17 +63,35 @@ public class Main{
 
     static void insert() throws SQLException {
 
+        String query = "INSERT INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setString(1, id);
+        preparedStatement.setString(2, parent_id);
+        preparedStatement.setString(3, link_id);
+        preparedStatement.setString(4, name);
+        preparedStatement.setString(5, author);
+        preparedStatement.setString(6, body);
+        preparedStatement.setInt(7, score);
+        preparedStatement.setInt(8, created_utc);
 
-//            String query = "INSERT INTO client (personal_number, firstname, lastname, address) VALUES (?, ?, ?, ?)";
-//
-//            PreparedStatement preparedStatement = connection.prepareStatement(query);
-//            preparedStatement.setInt(1, personalNumber);
-//            preparedStatement.setString(2, firstName);
-//            preparedStatement.setString(3, lastName);
-//            preparedStatement.setString(4, address);
-//
-//            preparedStatement.execute();
+        preparedStatement.execute();
+
+        String query2 = "INSERT INTO post (id, subreddit_id) VALUES (?, ?)";
+
+        PreparedStatement preparedStatement2 = connection.prepareStatement(query2);
+        preparedStatement2.setString(1, id);
+        preparedStatement2.setString(2, subreddit_id);
+
+        preparedStatement2.execute();
+
+        String query3 = "INSERT INTO subreddit (id, name) VALUES (?, ?)";
+
+        PreparedStatement preparedStatement3 = connection.prepareStatement(query3);
+        preparedStatement3.setString(1, id);
+        preparedStatement3.setString(2, name);
+
+        preparedStatement3.execute();
 
 
     }
