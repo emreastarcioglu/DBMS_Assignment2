@@ -27,7 +27,7 @@ public class Main{
     static int created_utc = 0;
     static int score = 0;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SQLException {
 
         File jsonFile = new File("RC_2007-10");
         FileReader fr = new FileReader(jsonFile);
@@ -36,6 +36,7 @@ public class Main{
 
         while ((line = br.readLine()) != null){
             parseJSONString(line);
+            insert();
         }
     }
 
@@ -62,6 +63,17 @@ public class Main{
     }
 
     static void insert() throws SQLException {
+        boolean subredditExists = false;
+
+        String query0 = "SELECT COUNT(subreddit.id) FROM subreddit WHERE subreddit.id = ?";
+
+        PreparedStatement preparedStatement0 = connection.prepareStatement(query0);
+        preparedStatement0.setString(1, subreddit);
+        ResultSet resultSet = preparedStatement0.executeQuery();
+
+        if(resultSet.getInt(1) == 0)
+            subredditExists = true;
+
 
         String query = "INSERT INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
