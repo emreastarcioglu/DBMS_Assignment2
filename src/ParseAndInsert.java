@@ -63,17 +63,38 @@ public class ParseAndInsert{
     }
 
     static void insert() throws SQLException {
-        boolean subredditExists = false;
 
         String query0 = "SELECT COUNT(subreddit.id) FROM subreddit WHERE subreddit.id = ?";
 
         PreparedStatement preparedStatement0 = connection.prepareStatement(query0);
-        preparedStatement0.setString(1, subreddit);
+        preparedStatement0.setString(1, subreddit_id);
         ResultSet resultSet = preparedStatement0.executeQuery();
 
-        if(resultSet.getInt(1) == 0)
-            subredditExists = true;
+//      Checks if subreddit exists or not in our database
+        if(resultSet.getInt(1) == 0){
+            String query3 = "INSERT INTO subreddit (id, name) VALUES (?, ?)";
 
+            PreparedStatement preparedStatement3 = connection.prepareStatement(query3);
+            preparedStatement3.setString(1, id);
+            preparedStatement3.setString(2, name);
+
+            preparedStatement3.execute();
+        }
+
+        String query1 = "SELECT COUNT(post.id) FROM post WHERE post.id = ?";
+        preparedStatement0 = connection.prepareStatement(query1);
+        preparedStatement0.setString(1, link_id);
+        resultSet = preparedStatement0.executeQuery();
+
+        if(resultSet.getInt(1) == 0){
+            String query2 = "INSERT INTO post (id, subreddit_id) VALUES (?, ?)";
+
+            PreparedStatement preparedStatement2 = connection.prepareStatement(query2);
+            preparedStatement2.setString(1, id);
+            preparedStatement2.setString(2, subreddit_id);
+
+            preparedStatement2.execute();
+        }
 
         String query = "INSERT INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -88,24 +109,6 @@ public class ParseAndInsert{
         preparedStatement.setInt(8, created_utc);
 
         preparedStatement.execute();
-
-        String query2 = "INSERT INTO post (id, subreddit_id) VALUES (?, ?)";
-
-        PreparedStatement preparedStatement2 = connection.prepareStatement(query2);
-        preparedStatement2.setString(1, id);
-        preparedStatement2.setString(2, subreddit_id);
-
-        preparedStatement2.execute();
-
-        String query3 = "INSERT INTO subreddit (id, name) VALUES (?, ?)";
-
-        PreparedStatement preparedStatement3 = connection.prepareStatement(query3);
-        preparedStatement3.setString(1, id);
-        preparedStatement3.setString(2, name);
-
-        preparedStatement3.execute();
-
-
     }
 
     static void parseJSONString(String line){
