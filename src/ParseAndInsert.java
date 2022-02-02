@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.sql.*;
 
 public class ParseAndInsert{
-    static final int portAddress = 3307;
+    static final int portAddress = 3306;
     static Connection connection = createConnection();
     static Statement stmnt = createStatement();
     static final String[] jsonKeys = {
@@ -71,14 +71,16 @@ public class ParseAndInsert{
         ResultSet resultSet = preparedStatement0.executeQuery();
 
 //      Checks if subreddit exists or not in our database
-        if(resultSet.getInt(1) == 0){
-            String query3 = "INSERT INTO subreddit (id, name) VALUES (?, ?)";
+        if (resultSet.next()){
+            if(resultSet.getInt(1) == 0){
+                String query3 = "INSERT INTO subreddit (id, name) VALUES (?, ?)";
 
-            PreparedStatement preparedStatement3 = connection.prepareStatement(query3);
-            preparedStatement3.setString(1, id);
-            preparedStatement3.setString(2, name);
+                PreparedStatement preparedStatement3 = connection.prepareStatement(query3);
+                preparedStatement3.setString(1, subreddit_id);
+                preparedStatement3.setString(2, subreddit);
 
-            preparedStatement3.execute();
+                preparedStatement3.execute();
+            }
         }
 
         String query1 = "SELECT COUNT(post.id) FROM post WHERE post.id = ?";
@@ -86,14 +88,16 @@ public class ParseAndInsert{
         preparedStatement0.setString(1, link_id);
         resultSet = preparedStatement0.executeQuery();
 
-        if(resultSet.getInt(1) == 0){
-            String query2 = "INSERT INTO post (id, subreddit_id) VALUES (?, ?)";
+        if (resultSet.next()) {
+            if (resultSet.getInt(1) == 0) {
+                String query2 = "INSERT INTO post (id, subreddit_id) VALUES (?, ?)";
 
-            PreparedStatement preparedStatement2 = connection.prepareStatement(query2);
-            preparedStatement2.setString(1, id);
-            preparedStatement2.setString(2, subreddit_id);
+                PreparedStatement preparedStatement2 = connection.prepareStatement(query2);
+                preparedStatement2.setString(1, link_id);
+                preparedStatement2.setString(2, subreddit_id);
 
-            preparedStatement2.execute();
+                preparedStatement2.execute();
+            }
         }
 
         String query = "INSERT INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -120,7 +124,7 @@ public class ParseAndInsert{
         name = obj.getString(jsonKeys[3]);
         author = obj.getString(jsonKeys[4]);
         body = obj.getString(jsonKeys[5]);
-        subreddit = obj.getString(jsonKeys[6]);
+        subreddit_id = obj.getString(jsonKeys[6]);
         subreddit = obj.getString(jsonKeys[7]);
         created_utc = obj.getInt(jsonKeys[8]);
         score = obj.getInt(jsonKeys[9]);
