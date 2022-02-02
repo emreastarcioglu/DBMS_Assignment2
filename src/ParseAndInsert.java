@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 
-public class Main{
+public class ParseAndInsert{
     static final int portAddress = 3307;
     static Connection connection = createConnection();
     static Statement stmnt = createStatement();
