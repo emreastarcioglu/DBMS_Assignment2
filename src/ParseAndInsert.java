@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.sql.*;
 
 public class ParseAndInsert{
-    static final int portAddress = 3306;
+    static final int portAddress = 3307;
     static Connection connection = createConnection();
     static Statement stmnt = createStatement();
     static final String[] jsonKeys = {
@@ -83,6 +83,31 @@ public class ParseAndInsert{
             }
         }
 
+        query0 = "SELECT COUNT(comment.id) FROM comment WHERE comment.id = ?";
+
+        preparedStatement0 = connection.prepareStatement(query0);
+        preparedStatement0.setString(1, id);
+        resultSet = preparedStatement0.executeQuery();
+
+        if (resultSet.next()){
+            if(resultSet.getInt(1) == 0){
+                String query = "INSERT INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setString(1, id);
+                preparedStatement.setString(2, parent_id);
+                preparedStatement.setString(3, link_id);
+                preparedStatement.setString(4, name);
+                preparedStatement.setString(5, author);
+                preparedStatement.setString(6, body);
+                preparedStatement.setInt(7, score);
+                preparedStatement.setInt(8, created_utc);
+
+                preparedStatement.execute();
+            }
+        }
+
+
         String query1 = "SELECT COUNT(post.id) FROM post WHERE post.id = ?";
         preparedStatement0 = connection.prepareStatement(query1);
         preparedStatement0.setString(1, link_id);
@@ -100,19 +125,19 @@ public class ParseAndInsert{
             }
         }
 
-        String query = "INSERT INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        PreparedStatement preparedStatement = connection.prepareStatement(query);
-        preparedStatement.setString(1, id);
-        preparedStatement.setString(2, parent_id);
-        preparedStatement.setString(3, link_id);
-        preparedStatement.setString(4, name);
-        preparedStatement.setString(5, author);
-        preparedStatement.setString(6, body);
-        preparedStatement.setInt(7, score);
-        preparedStatement.setInt(8, created_utc);
-
-        preparedStatement.execute();
+//        String query = "INSERT INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+//
+//        PreparedStatement preparedStatement = connection.prepareStatement(query);
+//        preparedStatement.setString(1, id);
+//        preparedStatement.setString(2, parent_id);
+//        preparedStatement.setString(3, link_id);
+//        preparedStatement.setString(4, name);
+//        preparedStatement.setString(5, author);
+//        preparedStatement.setString(6, body);
+//        preparedStatement.setInt(7, score);
+//        preparedStatement.setInt(8, created_utc);
+//
+//        preparedStatement.execute();
     }
 
     static void parseJSONString(String line){
