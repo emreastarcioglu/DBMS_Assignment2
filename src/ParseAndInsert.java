@@ -50,7 +50,7 @@ public class ParseAndInsert{
         Connection con = null;
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
-            String url = "jdbc:mysql://localhost:" + portAddress + "/deneme";
+            String url = "jdbc:mysql://localhost:" + portAddress + "/reddit";
             con = DriverManager.getConnection(url, "root", "root");
 
         } catch(Exception e) {
