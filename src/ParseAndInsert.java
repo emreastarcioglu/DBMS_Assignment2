@@ -1,10 +1,13 @@
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class ParseAndInsert{
     static final int portAddress = 3306;
@@ -16,41 +19,58 @@ public class ParseAndInsert{
             "subreddit", "created_utc", "score"
     };
 
-    static String subredditInsertQuery = "INSERT IGNORE INTO subreddit (id, name) VALUES (?, ?)";
-    static String postInsertQuery = "INSERT IGNORE INTO post (id, subreddit_id) VALUES (?, ?)";
-    static String commentInsertQuery = "INSERT IGNORE INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    static final String subredditInsertQuery = "INSERT IGNORE INTO subreddit (id, name) VALUES (?, ?)";
+    static final String postInsertQuery = "INSERT IGNORE INTO post (id, subreddit_id) VALUES (?, ?)";
+    static final String commentInsertQuery = "INSERT IGNORE INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-    static String id = "";
-    static String parent_id = "";
-    static String link_id = "";
-    static String name = "";
-    static String author = "";
-    static String body = "";
-    static String subreddit_id = "";
-    static String subreddit = "";
-    static int created_utc = 0;
-    static int score = 0;
+    String id;
+    String parent_id;
+    String link_id;
+    String name;
+    String author;
+    String body;
+    String subreddit_id;
+    String subreddit;
+    String created_utc;
+    long epoch;
+    int score;
 
     public static void main(String[] args) throws IOException, SQLException {
-
         File jsonFile = new File("RC_2007-10");
         FileReader fr = new FileReader(jsonFile);
         BufferedReader br = new BufferedReader(fr);
         String line;
 
+        long start = System.nanoTime();
+
+        ParseAndInsert[] objects = new ParseAndInsert[100];
+        int loopIndex = 0;
+
         while ((line = br.readLine()) != null){
-            parseJSONString(line);
-            insert();
+            objects[loopIndex] = parseJSONString(line);
+            loopIndex++;
+
+            if (loopIndex == 100){
+                loopIndex = 0;
+                insert(objects);
+            }
         }
 
+        long end = System.nanoTime();
+        long elapsedTime = (end - start) / 1_000_000_000;
+
+        System.out.println("Executed in " + elapsedTime + "second");
         System.out.println("______End of the Program______");
     }
+
 
     public static Connection createConnection(){
         Connection con = null;
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
-            String url = "jdbc:mysql://localhost:" + portAddress + "/reddit";
+            String url =
+                "jdbc:mysql://localhost:" + portAddress + "/reddit?"
+                + "rewriteBatchedStatements=true";
             con = DriverManager.getConnection(url, "root", "root");
 
         } catch(Exception e) {
@@ -58,6 +78,7 @@ public class ParseAndInsert{
         }
         return con;
     }
+
 
     public static Statement createStatement(){
         try{
@@ -68,47 +89,69 @@ public class ParseAndInsert{
         return stmnt;
     }
 
-    static void insert() throws SQLException {
+
+    static void insert(ParseAndInsert[] array) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(subredditInsertQuery);
-        preparedStatement.setString(1, subreddit_id);
-        preparedStatement.setString(2, subreddit);
 
-        preparedStatement.execute();
-
+        for (int i = 0; i < 100; i++){
+            preparedStatement.setString(1, array[i].subreddit_id);
+            preparedStatement.setString(2, array[i].subreddit);
+            preparedStatement.addBatch();
+        }
+        preparedStatement.executeBatch();
 
         preparedStatement = connection.prepareStatement(postInsertQuery);
-        preparedStatement.setString(1, link_id);
-        preparedStatement.setString(2, subreddit_id);
 
-        preparedStatement.execute();
-
+        for (int i = 0; i < 100; i++){
+            preparedStatement.setString(1, array[i].link_id);
+            preparedStatement.setString(2, array[i].subreddit_id);
+            preparedStatement.addBatch();
+        }
+        preparedStatement.executeBatch();
 
         preparedStatement = connection.prepareStatement(commentInsertQuery);
-        preparedStatement.setString(1, id);
-        preparedStatement.setString(2, parent_id);
-        preparedStatement.setString(3, link_id);
-        preparedStatement.setString(4, name);
-        preparedStatement.setString(5, author);
-        preparedStatement.setString(6, body);
-        preparedStatement.setInt(7, score);
-        preparedStatement.setInt(8, created_utc);
-
-        preparedStatement.execute();
+        for (int i = 0; i < 100; i++) {
+            preparedStatement.setString(1, array[i].id);
+            preparedStatement.setString(2, array[i].parent_id);
+            preparedStatement.setString(3, array[i].link_id);
+            preparedStatement.setString(4, array[i].name);
+            preparedStatement.setString(5, array[i].author);
+            preparedStatement.setString(6, array[i].body);
+            preparedStatement.setInt(7, array[i].score);
+            preparedStatement.setString(8, array[i].created_utc);
+            preparedStatement.addBatch();
+        }
+        preparedStatement.executeBatch();
     }
 
-    static void parseJSONString(String line){
+
+    static ParseAndInsert parseJSONString(String line){
         JSONObject obj = new JSONObject(line);
 
-        id = obj.getString(jsonKeys[0]);
-        parent_id = obj.getString(jsonKeys[1]);
-        link_id = obj.getString(jsonKeys[2]);
-        name = obj.getString(jsonKeys[3]);
-        author = obj.getString(jsonKeys[4]);
-        body = obj.getString(jsonKeys[5]);
-        subreddit_id = obj.getString(jsonKeys[6]);
-        subreddit = obj.getString(jsonKeys[7]);
-        created_utc = obj.getInt(jsonKeys[8]);
-        score = obj.getInt(jsonKeys[9]);
+        ParseAndInsert parseObj = new ParseAndInsert();
+
+        parseObj.id = obj.getString(jsonKeys[0]);
+        parseObj.parent_id = obj.getString(jsonKeys[1]);
+        parseObj.link_id = obj.getString(jsonKeys[2]);
+        parseObj.name = obj.getString(jsonKeys[3]);
+        parseObj.author = obj.getString(jsonKeys[4]);
+        parseObj.body = obj.getString(jsonKeys[5]);
+        parseObj.subreddit_id = obj.getString(jsonKeys[6]);
+        parseObj.subreddit = obj.getString(jsonKeys[7]);
+
+        parseObj.epoch = obj.getInt(jsonKeys[8]);
+        parseObj.created_utc = convertEpochToDateFormat(parseObj.epoch);
+
+        parseObj.score = obj.getInt(jsonKeys[9]);
+
+        return parseObj;
+    }
+
+
+    static String convertEpochToDateFormat(long epoch){
+        LocalDateTime dateTime = LocalDateTime.ofEpochSecond(epoch, 0, ZoneOffset.UTC);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH);
+        return dateTime.format(formatter);
     }
 }
 
