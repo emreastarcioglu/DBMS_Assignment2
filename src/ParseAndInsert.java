@@ -1,8 +1,5 @@
 import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -13,6 +10,8 @@ public class ParseAndInsert{
     static final int portAddress = 3306;
     static Connection connection = createConnection();
     static Statement stmnt = createStatement();
+    static int numberOfInsertion = 400;
+
     static final String[] jsonKeys = {
             "id", "parent_id", "link_id", "name",
             "author", "body", "subreddit_id",
@@ -36,21 +35,22 @@ public class ParseAndInsert{
     int score;
 
     public static void main(String[] args) throws IOException, SQLException {
+        long start = System.nanoTime();
+
         File jsonFile = new File("RC_2007-10");
         FileReader fr = new FileReader(jsonFile);
         BufferedReader br = new BufferedReader(fr);
         String line;
 
-        long start = System.nanoTime();
-
-        ParseAndInsert[] objects = new ParseAndInsert[100];
+        ParseAndInsert[] objects = new ParseAndInsert[numberOfInsertion];
         int loopIndex = 0;
 
-        while ((line = br.readLine()) != null){
+        while ((line = br.readLine()) != null) {
             objects[loopIndex] = parseJSONString(line);
+
             loopIndex++;
 
-            if (loopIndex == 100){
+            if (loopIndex == numberOfInsertion) {
                 loopIndex = 0;
                 insert(objects);
             }
@@ -93,7 +93,7 @@ public class ParseAndInsert{
     static void insert(ParseAndInsert[] array) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(subredditInsertQuery);
 
-        for (int i = 0; i < 100; i++){
+        for (int i = 0; i < numberOfInsertion; i++){
             preparedStatement.setString(1, array[i].subreddit_id);
             preparedStatement.setString(2, array[i].subreddit);
             preparedStatement.addBatch();
@@ -102,7 +102,7 @@ public class ParseAndInsert{
 
         preparedStatement = connection.prepareStatement(postInsertQuery);
 
-        for (int i = 0; i < 100; i++){
+        for (int i = 0; i < numberOfInsertion; i++){
             preparedStatement.setString(1, array[i].link_id);
             preparedStatement.setString(2, array[i].subreddit_id);
             preparedStatement.addBatch();
@@ -110,7 +110,7 @@ public class ParseAndInsert{
         preparedStatement.executeBatch();
 
         preparedStatement = connection.prepareStatement(commentInsertQuery);
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < numberOfInsertion; i++) {
             preparedStatement.setString(1, array[i].id);
             preparedStatement.setString(2, array[i].parent_id);
             preparedStatement.setString(3, array[i].link_id);
@@ -154,4 +154,5 @@ public class ParseAndInsert{
         return dateTime.format(formatter);
     }
 }
+
 
