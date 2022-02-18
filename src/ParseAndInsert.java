@@ -7,11 +7,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public class ParseAndInsert{
+
+//  Change port address of the database relative to port on your device
     static final int portAddress = 3306;
     static Connection connection = createConnection();
     static Statement stmnt = createStatement();
     static int numberOfInsertion = 400;
 
+//  JSON key names
     static final String[] jsonKeys = {
             "id", "parent_id", "link_id", "name",
             "author", "body", "subreddit_id",
@@ -22,6 +25,7 @@ public class ParseAndInsert{
     static final String postInsertQuery = "INSERT IGNORE INTO post (id, subreddit_id) VALUES (?, ?)";
     static final String commentInsertQuery = "INSERT IGNORE INTO comment (id, parent_id, link_id, name, author, body, score, created_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
+//  Fields to store values of keys that come from JSON file
     String id;
     String parent_id;
     String link_id;
@@ -46,9 +50,7 @@ public class ParseAndInsert{
         int loopIndex = 0;
 
         while ((line = br.readLine()) != null) {
-            objects[loopIndex] = parseJSONString(line);
-
-            loopIndex++;
+            objects[loopIndex++] = parseJSONString(line);
 
             if (loopIndex == numberOfInsertion) {
                 loopIndex = 0;
@@ -59,17 +61,16 @@ public class ParseAndInsert{
         long end = System.nanoTime();
         long elapsedTime = (end - start) / 1_000_000_000;
 
-        System.out.println("Executed in " + elapsedTime + "second");
-        System.out.println("______End of the Program______");
+        System.out.println("Program has been executed in " + elapsedTime + "second");
     }
 
-
+//  This method creates connectivity with database
     public static Connection createConnection(){
         Connection con = null;
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
             String url =
-                "jdbc:mysql://localhost:" + portAddress + "/reddit?"
+                "jdbc:mysql://localhost:" + portAddress + "/reddit1?"
                 + "rewriteBatchedStatements=true";
             con = DriverManager.getConnection(url, "root", "root");
 
@@ -79,7 +80,7 @@ public class ParseAndInsert{
         return con;
     }
 
-
+//  This method creates statement to use queries on the database
     public static Statement createStatement(){
         try{
             stmnt = connection.createStatement();
@@ -89,7 +90,7 @@ public class ParseAndInsert{
         return stmnt;
     }
 
-
+//  This method insert data into database by adding them in batch and executing batch at once
     static void insert(ParseAndInsert[] array) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(subredditInsertQuery);
 
@@ -124,7 +125,7 @@ public class ParseAndInsert{
         preparedStatement.executeBatch();
     }
 
-
+//  This method parses json object and returns key's value with ParseAndInsert object
     static ParseAndInsert parseJSONString(String line){
         JSONObject obj = new JSONObject(line);
 
@@ -147,7 +148,7 @@ public class ParseAndInsert{
         return parseObj;
     }
 
-
+//  This method convert Epoch second time format to date-time format
     static String convertEpochToDateFormat(long epoch){
         LocalDateTime dateTime = LocalDateTime.ofEpochSecond(epoch, 0, ZoneOffset.UTC);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH);
